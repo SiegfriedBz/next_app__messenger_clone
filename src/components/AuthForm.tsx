@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { FieldValues, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { twMerge } from "tailwind-merge"
 import { toast } from "react-toastify"
 import { authFormSchema } from "@/lib/zodSchemas"
 import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import type { TAuthForm } from "@/lib/zodSchemas"
 
 type TFormVariant = "SIGN_UP" | "SIGN_IN"
@@ -16,6 +16,11 @@ const inputClasses =
   "px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 placeholder-inherit text-inherit"
 
 const AuthForm = () => {
+  const router = useRouter()
+
+  const { status } = useSession()
+  const isAuthenticated = status === "authenticated"
+
   const [formVariant, setFormVariant] = useState<TFormVariant>("SIGN_IN")
 
   const {
@@ -28,8 +33,17 @@ const AuthForm = () => {
     resolver: zodResolver(authFormSchema),
   })
 
-  const router = useRouter()
+  // redirect to conversations page if user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return
 
+    toast.success(
+      "Successfully authenticated, jumping into your Conversations..."
+    )
+    router.push("/users")
+  }, [isAuthenticated, router])
+
+  // onSubmit - handle SignUp & SignIn
   const onSubmit = async (data: FieldValues) => {
     /** SIGN_UP */
     if (formVariant === "SIGN_UP") {
@@ -66,7 +80,7 @@ const AuthForm = () => {
           // reset form
           reset()
           // redirect to conversations page
-          router.push("/conversations")
+          router.push("/users")
         }
       } catch (error) {
         console.error("error", error)
@@ -75,7 +89,7 @@ const AuthForm = () => {
       }
     } else if (formVariant === "SIGN_IN") {
       /** SIGN_IN */
-      // signIn("credentials", { ...data, callbackUrl: "/conversations" })
+      // signIn("credentials", { ...data, callbackUrl: "/users" })
       signIn("credentials", { ...data, redirect: false })
         .then((callback) => {
           if (callback?.error) {
@@ -87,7 +101,7 @@ const AuthForm = () => {
             // notify user
             toast.success("You logged in successfully!")
             // redirect to conversations page
-            router.push("/conversations")
+            router.push("/users")
           }
         })
         .catch((error) => {
