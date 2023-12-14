@@ -8,7 +8,7 @@ import { toast } from "react-toastify"
 
 const AuthSocial = () => {
   const signInAction = async (provider: string) => {
-    signIn(provider, { callbackUrl: "/conversations" })
+    signIn(provider, { callbackUrl: "/users" })
       .then(() => {
         // notify user
         toast.success("You logged in successfully!")
