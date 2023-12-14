@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+//**
+// In a 1-to-MANY relationship, the relation field should be on the "MANY" side. 
+// This is because each instance of the "many" side is related to exactly one instance of the "one" side.
+
+// In a MANY-to-MANY relationship, the relation field should be on BOTH sides. 
+// This is because each instance on one side can be related to multiple instances on the other side, and vice versa.
+//
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  hashPassword  String?
+
+  // ======================
+  // ======================
+  // ONE to MANY relation between user (AUTHOR) and message models
+  // 1 user can have many messages, and 1 message is authored by 1 user
+  // the relation is defined on the "many" side (here the message model)
+  // "scalar field"
+  messages Message[]
+
+  // ======================
+  // ======================
+  // MANY to MANY relation between user (VIEWER) and message models
+  // to disambiguate the relation, we need to provide a name for it (here "seen"),
+  // because we already have messages Message[] in the User model
+  // "scalar field"
+  seenMessageIds String[] @db.ObjectId
+
+  // NAMED "relation field" (does NOT store any data, it's just a reference to the relation)
+  // => allows to access the seenMessages in 1 SINGLE query to the user, using the seenMessageIds.
+  // to make it work, a @relation("seen") is needed on the other side of the relation (here the message model)
+  seenMessages Message[] @relation("seen", fields: [seenMessageIds], references: [id])
+
+  // ======================
+  // ======================
+  // many to many relation between user (VIEWER) and conversation models
+  // "scalar field"
+  conversationIds String[] @db.ObjectId
+
+  // "relation field"
+  conversations Conversation[] @relation(fields: [conversationIds], references: [id])
+
+  // ======================
+  // ======================
+  accounts Account[]
+  sessions Session[]
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content String?
+  image   String?
+
+  // ======================
+  // 1 to many relation 
+  // counterpart of the 1 to many relation between user (AUTHOR) and message models
+  // 1 user can have many messages, and 1 message is authored by 1 user
+  authorId String @db.ObjectId
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // ======================
+  // MANY to MANY between user (VIEWER) and message models
+  seenByUserIds String[] @db.ObjectId
+  seenByUsers   User[]   @relation("seen", fields: [seenByUserIds], references: [id])
+
+  // ======================
+  // MANY to MANY between message and conversation models
+  conversationId String       @db.ObjectId
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String?
+  isGroup     Boolean @default(false)
+  description String?
+
+  // ======================
+  // MANY to MANY between conversation and message models
+  messagesIds String[]  @db.ObjectId
+  messages    Message[]
+
+  // ======================
+  // MANY to MANY between conversation and user models
+  userIds String[] @db.ObjectId
+  users   User[]   @relation(fields: [userIds], references: [id])
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  expires      DateTime
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
