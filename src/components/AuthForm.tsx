@@ -33,7 +33,7 @@ const AuthForm = () => {
   const onSubmit = async (data: FieldValues) => {
     /** SIGN_UP */
     if (formVariant === "SIGN_UP") {
-      const API_URL = `${process.env.NEXT_PUBLIC_URL}/api/register`
+      const API_URL = `/api/register`
 
       try {
         const response = await fetch(API_URL, {
@@ -75,11 +75,9 @@ const AuthForm = () => {
       }
     } else if (formVariant === "SIGN_IN") {
       /** SIGN_IN */
-      console.log("signIn(credentials)")
       // signIn("credentials", { ...data, callbackUrl: "/conversations" })
       signIn("credentials", { ...data, redirect: false })
         .then((callback) => {
-          console.log("callback", callback)
           if (callback?.error) {
             // notify user
             toast.error("Invalid credentials, please try again")
