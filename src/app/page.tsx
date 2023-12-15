@@ -1,6 +1,6 @@
 import Logo from "@/components/Logo"
-import AuthForm from "@/components/AuthForm"
-import AuthSocial from "@/components/AuthSocial"
+import AuthForm from "@/components/auth/AuthForm"
+import AuthSocial from "@/components/auth/AuthSocial"
 
 export default function Home() {
   return (

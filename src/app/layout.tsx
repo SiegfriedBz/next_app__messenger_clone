@@ -27,7 +27,7 @@ export default async function RootLayout({
   return (
     <html lang='en'>
       <body
-        className={`container h-screen mx-auto p-4 sm:p-8 lg:p-16 bg-gray-100 ${inter.className}`}
+        className={`container h-screen mx-auto bg-gray-100 ${inter.className}`}
       >
         <SessionProvider session={session}>
           {children}

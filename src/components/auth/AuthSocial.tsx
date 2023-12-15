@@ -3,7 +3,7 @@
 import { twMerge } from "tailwind-merge"
 import { signIn } from "next-auth/react"
 import { BsGithub, BsGoogle } from "react-icons/bs"
-import { IconType } from "react-icons"
+import type { IconType } from "react-icons"
 import { toast } from "react-toastify"
 
 const AuthSocial = () => {
